@@ -40,11 +40,13 @@ module REPL
   # @param [#eof? & #readline] source
   # @param [String] input text prepended to what is read
   # @return [NilClass]
-  def self.rep(source, input: +"")
+  def self.rep(source, input: "")
     print "user#{input.size.zero? ? '>' : '*'} "
     raise StopIteration if source.eof?
 
+    input = +input if input.frozen?
     input << source.readline
+
     begin
       puts Parser.parse(input).inspect
     rescue Parser::UnexpectedEofError
