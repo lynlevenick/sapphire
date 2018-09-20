@@ -1,6 +1,11 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+if $PROGRAM_NAME == __FILE__
+  # running interactively, bootstrap into bundler context
+  require "bundler/setup"
+end
+
 require_relative "parser"
 
 # High-level REPL interface
@@ -41,6 +46,6 @@ module REPL
 end
 
 if $PROGRAM_NAME == __FILE__
-  # run interactively
+  # running interactively, run repl
   REPL.repl(ARGF)
 end
