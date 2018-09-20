@@ -7,6 +7,9 @@ Metrics/ModuleLength:
 Naming/UncommunicativeMethodParamName:
   MinNameLength: 2
 
+Style/AndOr:
+  EnforcedStyle: conditionals
+
 Style/BlockDelimiters:
   EnforcedStyle: semantic
 

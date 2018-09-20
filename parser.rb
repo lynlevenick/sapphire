@@ -93,20 +93,18 @@ module Parser
   end
 
   # @param [String] str
-  # @return [Array<String>] tokens
+  # @return [Array<String>]
   def self.lex(str)
     scanner = StringScanner.new(str)
     tokens = []
 
     until scanner.eos?
-      unless scanner.scan(TOKEN_REGEXP)
+      if scanner.scan(TOKEN_REGEXP)
+        tokens << scanner[1]
+      else
         scanner.scan(IGNORED_REGEXP)
-        break if scanner.eos?
-
-        raise BadParseError
+        scanner.eos? and break or raise BadParseError
       end
-
-      tokens << scanner[1]
     end
 
     tokens
