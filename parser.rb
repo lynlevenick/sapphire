@@ -10,6 +10,7 @@ module Parser
   class BadParseError < StandardError
   end
 
+  IGNORED_REGEXP = /\A(?:\s+|;.*$)*/ # comments, whitespace
   NUMBER_REGEXP = /\A(?:-)?[0-9]*(?:.[0-9]+)?(?:e[0-9]+(?:.[0-9]+)?)?\z/
   REGEXP_REGEXP = /
     \A
@@ -21,7 +22,7 @@ module Parser
   STRING_REGEXP = /\A"(?:\\.|[^\\"])*"\z/
 
   TOKEN_REGEXP = /
-    (?:\s+|;.*$)*       # ignore comments, whitespace
+    #{IGNORED_REGEXP}
     (
       ,@ | [()'`,]      # unquote-splicing, parens, quote, quasiquote, unquote
     | #{NUMBER_REGEXP}
@@ -48,7 +49,11 @@ module Parser
     tokens = []
 
     until scanner.eos?
-      break unless scanner.scan(TOKEN_REGEXP)
+      unless scanner.scan(TOKEN_REGEXP)
+        break if IGNORED_REGEXP =~ scanner.rest
+
+        raise BadParseError
+      end
 
       tokens << scanner[1]
     end

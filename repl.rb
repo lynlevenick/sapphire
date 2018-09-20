@@ -26,10 +26,9 @@ module REPL
 
   private_class_method def self.rep(source, tty: source_is_tty?(source))
     print "user> " if tty
-
     raise StopIteration if source.eof?
-    input = source.readline.rstrip
 
+    input = source.readline
     puts Parser.parse(input).inspect
   end
 
