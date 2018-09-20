@@ -12,63 +12,6 @@ module Parser
   class BadParseError < StandardError
   end
 
-  BINARY_DIGIT =  /[01]|(?:[01]_[01])/
-  DECIMAL_DIGIT = /[0-9]|(?:[0-9]_[0-9])/
-  HEX_DIGIT =     /[0-9a-f]|(?:[0-9a-f]_[0-9a-f])/i
-  OCTAL_DIGIT =   /[0-7]|(?:_[0-7])/
-
-  BINARY_NUMBER = /0b#{BINARY_DIGIT}+/i
-  DECIMAL_NUMBER = /
-    #{DECIMAL_DIGIT}*\.?#{DECIMAL_DIGIT}+
-    (?:e[-+]?#{DECIMAL_DIGIT}*\.?#{DECIMAL_DIGIT}+)?
-  /ix
-  HEX_NUMBER = /0x#{HEX_DIGIT}+/i
-  OCTAL_NUMBER = /0#{OCTAL_DIGIT}+/
-
-  # Matches numbers, no distinction between integers and floats
-  # @todo Figure out how to make e.g. (+1 2) => 3 work, right now
-  #       `+1` parses as an integer, but do we want (-1 2) => 1 or
-  #       (-1 2) => can't call integer -1?
-  #       consider: integer call is implicitly add
-  NUMBER = /
-    \A
-    [-+]?
-    (?:
-      #{BINARY_NUMBER}
-    | #{DECIMAL_NUMBER}
-    | #{HEX_NUMBER}
-    | #{OCTAL_NUMBER}
-    )
-    \z
-  /x
-
-  # Matches ruby-style-delimited regular expression syntax
-  REGEXP = /
-    \A
-    (?:
-      \/(?:\\.|[^\\\/])*\/
-    | %r\{(?:\\.|[^\\}])*}
-    )[imxo]*
-    \z
-  /mx
-  # Matches strings, including escaping
-  STRING = /\A"(?:\\.|[^\\"])*"\z/
-
-  # Matches comments and whitespace
-  IGNORED = /\A(?:\s+|;.*$)*/
-
-  # Matches any Sapphire token, skipping whitespace and comments
-  TOKEN = /
-    #{IGNORED}
-    (
-      ,@ | [()'`,]      # unquote-splicing, parens, quote, quasiquote, unquote
-    | #{NUMBER}
-    | #{REGEXP}
-    | #{STRING}
-    | [^\s;()'`,]+      # identifiers
-    )
-  /x
-
   # Parses a top-level Sapphire form into ruby objects
   # @param [String] str string to parse forms from
   # @return [Symbol, Array<Object>]
@@ -91,6 +34,75 @@ module Parser
     tokens = lex(str)
     read_form!(tokens).freeze
   end
+
+  BINARY_DIGIT = /[01]|(?:[01]_[01])/
+  BINARY_NUMBER = /0b#{BINARY_DIGIT}+/i
+  private_constant :BINARY_DIGIT, :BINARY_NUMBER
+
+  DECIMAL_DIGIT = /[0-9]|(?:[0-9]_[0-9])/
+  DECIMAL_NUMBER = /
+    #{DECIMAL_DIGIT}*\.?#{DECIMAL_DIGIT}+
+    (?:e[-+]?#{DECIMAL_DIGIT}*\.?#{DECIMAL_DIGIT}+)?
+  /ix
+  private_constant :DECIMAL_DIGIT, :DECIMAL_NUMBER
+
+  HEX_DIGIT = /[0-9a-f]|(?:[0-9a-f]_[0-9a-f])/i
+  HEX_NUMBER = /0x#{HEX_DIGIT}+/i
+  private_constant :HEX_DIGIT, :HEX_NUMBER
+
+  OCTAL_DIGIT = /[0-7]|(?:_[0-7])/
+  OCTAL_NUMBER = /0#{OCTAL_DIGIT}+/
+  private_constant :OCTAL_DIGIT, :OCTAL_NUMBER
+
+  # Matches numbers, no distinction between integers and floats
+  # @todo Figure out how to make e.g. (+1 2) => 3 work, right now
+  #       `+1` parses as an integer, but do we want (-1 2) => 1 or
+  #       (-1 2) => can't call integer -1?
+  #       consider: integer call is implicitly add
+  NUMBER = /
+    \A
+    [-+]?
+    (?:
+      #{BINARY_NUMBER}
+    | #{DECIMAL_NUMBER}
+    | #{HEX_NUMBER}
+    | #{OCTAL_NUMBER}
+    )
+    \z
+  /x
+  private_constant :NUMBER
+
+  # Matches ruby-style-delimited regular expression syntax
+  REGEXP = /
+    \A
+    (?:
+      \/(?:\\.|[^\\\/])*\/
+    | %r\{(?:\\.|[^\\}])*}
+    )[imxo]*
+    \z
+  /mx
+  private_constant :REGEXP
+
+  # Matches strings, including escaping
+  STRING = /\A"(?:\\.|[^\\"])*"\z/
+  private_constant :STRING
+
+  # Matches comments and whitespace
+  IGNORED = /\A(?:\s+|;.*$)*/
+  private_constant :IGNORED
+
+  # Matches any Sapphire token, skipping whitespace and comments
+  TOKEN = /
+    #{IGNORED}
+    (
+      ,@ | [()'`,]      # unquote-splicing, parens, quote, quasiquote, unquote
+    | #{NUMBER}
+    | #{REGEXP}
+    | #{STRING}
+    | [^\s;()'`,]+      # identifiers
+    )
+  /x
+  private_constant :TOKEN
 
   # @param [String] str
   # @return [Array<String>]
