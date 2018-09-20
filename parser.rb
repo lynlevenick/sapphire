@@ -61,6 +61,17 @@ module Parser
     tokens
   end
 
+  private_class_method def self.parse_regexp_options(options)
+    options&.chars&.reduce(0) { |acc, c|
+      case c
+      when "i" then acc | Regexp::IGNORECASE
+      when "m" then acc | Regexp::MULTILINE
+      when "x" then acc | Regexp::EXTENDED
+      else acc
+      end
+    }
+  end
+
   private_class_method def self.parse_regexp_source(source)
     case source[0]
     when "/"
@@ -69,30 +80,18 @@ module Parser
     when "%"
       split_idx = source.rindex("}")
       re = source[3..split_idx - 1]
-    else
-      raise BadParseError
+    else raise BadParseError
     end
 
-    options = source[split_idx + 1..-1]&.chars&.reduce(0) { |acc, c|
-      case c
-      when "i"
-        acc | Regexp::IGNORECASE
-      when "m"
-        acc | Regexp::MULTILINE
-      when "x"
-        acc | Regexp::EXTENDED
-      else
-        acc
-      end
-    }
-
-    Regexp.new(re, options)
+    Regexp.new(re, parse_regexp_options(source[split_idx + 1..-1]))
   end
 
   private_class_method def self.parse_string_source(source)
     JSON.parse(source)
   end
 
+  # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity
+  # rubocop:disable Metrics/MethodLength
   private_class_method def self.read_form!(tokens)
     raise UnexpectedEofError if tokens.empty?
 
@@ -101,14 +100,17 @@ module Parser
     case token
     when "", ")"
       raise BadParseError
+
     when "("
       read_list!(tokens)
     when "nil"
       []
+
     when "#t"
       true
     when "#f"
       false
+
     when "'"
       [:quote, read_form!(tokens)]
     when "`"
@@ -123,10 +125,13 @@ module Parser
       parse_regexp_source(token)
     when STRING_REGEXP
       parse_string_source(token)
+
     else
       token.to_sym
     end.freeze
   end
+  # rubocop:enable Metrics/MethodLength
+  # rubocop:enable Metrics/AbcSize, Metrics/CyclomaticComplexity
 
   private_class_method def self.read_list!(tokens)
     res = []
