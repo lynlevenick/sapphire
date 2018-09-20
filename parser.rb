@@ -3,7 +3,7 @@
 require "json"
 require "strscan"
 
-# Namespace for functions parsing strings into lisp-style forms
+# Namespace for functions parsing strings into Sapphire forms
 module Parser
   # Error raised when parsing expects content but finds end of file
   class UnexpectedEofError < StandardError
@@ -39,7 +39,7 @@ module Parser
     )
   /x
 
-  # Parses a top-level lisp form into ruby objects
+  # Parses a top-level Sapphire form into ruby objects
   # @param [String] str string to parse forms from
   # @return [Symbol, Array<Object>]
   # @raise [UnexpectedEofError]
@@ -51,7 +51,7 @@ module Parser
     forms.freeze
   end
 
-  # Parses a lisp form into a ruby object
+  # Parses a Sapphire form into a ruby object
   # @todo Don't lex the entire string just to read a form off the front
   # @param [String] str string to parse form from
   # @return [Array<Object>]
