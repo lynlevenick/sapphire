@@ -12,11 +12,36 @@ module Parser
   class BadParseError < StandardError
   end
 
-  # Matches comments and whitespace
-  IGNORED_REGEXP = /\A(?:\s+|;.*$)*/
+  BINARY_DIGIT_REGEXP =  /[01]|(?:[01]_[01])/
+  DECIMAL_DIGIT_REGEXP = /[0-9]|(?:[0-9]_[0-9])/
+  HEX_DIGIT_REGEXP =     /[0-9a-f]|(?:[0-9a-f]_[0-9a-f])/i
+  OCTAL_DIGIT_REGEXP =   /[0-7]|(?:_[0-7])/
+
+  BINARY_NUMBER_REGEXP = /0b#{BINARY_DIGIT_REGEXP}+/i
+  DECIMAL_NUMBER_REGEXP = /
+    [-+]?
+    #{DECIMAL_DIGIT_REGEXP}*\.?#{DECIMAL_DIGIT_REGEXP}+
+    (?:e[-+]?#{DECIMAL_DIGIT_REGEXP}*\.?#{DECIMAL_DIGIT_REGEXP}+)?
+  /ix
+  HEX_NUMBER_REGEXP = /0x#{HEX_DIGIT_REGEXP}+/i
+  OCTAL_NUMBER_REGEXP = /0#{OCTAL_DIGIT_REGEXP}+/
+
   # Matches numbers, no distinction between integers and floats
-  # @todo Figure out how to make e.g. (+1 2) => 3 work
-  NUMBER_REGEXP = /\A[-+]?[0-9]*\.?[0-9]+(?:e[-+]?[0-9]*\.?[0-9]+)?\z/i
+  # @todo Figure out how to make e.g. (+1 2) => 3 work, right now
+  #       `+1` parses as an integer, but do we want (-1 2) => 1 or
+  #       (-1 2) => can't call integer -1?
+  #       consider: integer call is implicitly add
+  NUMBER_REGEXP = /
+    \A
+    (?:
+      #{BINARY_NUMBER_REGEXP}
+    | #{DECIMAL_NUMBER_REGEXP}
+    | #{HEX_NUMBER_REGEXP}
+    | #{OCTAL_NUMBER_REGEXP}
+    )
+    \z
+  /x
+
   # Matches ruby-style-delimited regular expression syntax
   REGEXP_REGEXP = /
     \A
@@ -24,9 +49,13 @@ module Parser
       \/(?:\\.|[^\\\/])*\/
     | %r\{(?:\\.|[^\\}])*}
     )[imxo]*
+    \z
   /mx
   # Matches strings, including escaping
   STRING_REGEXP = /\A"(?:\\.|[^\\"])*"\z/
+
+  # Matches comments and whitespace
+  IGNORED_REGEXP = /\A(?:\s+|;.*$)*/
 
   # Matches any Sapphire token, skipping whitespace and comments
   TOKEN_REGEXP = /
@@ -71,7 +100,8 @@ module Parser
 
     until scanner.eos?
       unless scanner.scan(TOKEN_REGEXP)
-        break if IGNORED_REGEXP =~ scanner.rest
+        scanner.scan(IGNORED_REGEXP)
+        break if scanner.eos?
 
         raise BadParseError
       end
@@ -82,6 +112,16 @@ module Parser
     tokens
   end
   private_class_method :lex
+
+  # @param [String] source
+  # @return [Numeric] source parsed as a number
+  def self.parse_number_source(source)
+    if source.index(/[.e]/i) && !source.index(/x/i)
+      Float(source)
+    else
+      Integer(source)
+    end
+  end
 
   # @param [String] options
   # @return [Numeric] regexp options suitable to pass to {Regexp.new}
@@ -161,7 +201,7 @@ module Parser
       [:'unquote-splicing', read_form!(tokens)]
 
     when NUMBER_REGEXP
-      token.to_f
+      parse_number_source(token)
     when REGEXP_REGEXP
       parse_regexp_source(token)
     when STRING_REGEXP
