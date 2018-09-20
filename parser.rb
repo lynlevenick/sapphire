@@ -19,7 +19,6 @@ module Parser
 
   BINARY_NUMBER_REGEXP = /0b#{BINARY_DIGIT_REGEXP}+/i
   DECIMAL_NUMBER_REGEXP = /
-    [-+]?
     #{DECIMAL_DIGIT_REGEXP}*\.?#{DECIMAL_DIGIT_REGEXP}+
     (?:e[-+]?#{DECIMAL_DIGIT_REGEXP}*\.?#{DECIMAL_DIGIT_REGEXP}+)?
   /ix
@@ -33,6 +32,7 @@ module Parser
   #       consider: integer call is implicitly add
   NUMBER_REGEXP = /
     \A
+    [-+]?
     (?:
       #{BINARY_NUMBER_REGEXP}
     | #{DECIMAL_NUMBER_REGEXP}
