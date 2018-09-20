@@ -9,47 +9,60 @@ end
 
 require_relative "parser"
 
-# High-level REPL interface
+# Namespace for the high-level REPL interface
 module REPL
+  # Runs a repl
+  # @param [#eof? & #readline, #read, String] source source to read from
+  # @return [NilClass]
+  # @raise [Parser::BadParseError]
   def self.repl(source)
-    if source.respond_to?(:readline)
-      tty = source_is_tty?(source)
-
+    if source.respond_to?(:eof?) && source.respond_to?(:readline) &&
+       source_is_tty?(source)
       loop do
-        rep(source, tty: tty)
+        rep(source)
       end
 
-      print "\n" if tty
+      print "\n"
     else
       noninteractive(source)
     end
   end
 
-  private_class_method def self.source_is_tty?(source)
+  # @param [#tty?, #file, Object] source
+  # @return [true] source is a tty
+  # @return [false] source is not a tty
+  def self.source_is_tty?(source)
     source.respond_to?(:tty?) && source.tty? ||
-    source.respond_to?(:file) && source.file&.tty?
+      source.respond_to?(:file) && source.file&.tty?
   end
+  private_class_method :source_is_tty?
 
-  private_class_method def self.rep(source, input: +"",
-                                    tty: source_is_tty?(source))
-    sigil = input.size.zero? ? ">" : "*"
-    print "user#{sigil} " if tty
+  # @param [#eof? & #readline] source
+  # @param [String] input text prepended to what is read
+  # @return [NilClass]
+  def self.rep(source, input: +"")
+    print "user#{input.size.zero? ? '>' : '*'} "
     raise StopIteration if source.eof?
 
     input << source.readline
     begin
       puts Parser.parse(input).inspect
     rescue Parser::UnexpectedEofError
-      rep(source, input: input, tty: tty)
+      rep(source, input: input)
     end
   end
+  private_class_method :rep
 
-  private_class_method def self.noninteractive(source)
+  # execute source noninteractively
+  # @param [#read, String] source
+  # @return [NilClass]
+  def self.noninteractive(source)
     source = source.read if source.respond_to?(:read)
 
     form = Parser.parse(source)
     puts form.inspect
   end
+  private_class_method :noninteractive
 end
 
 if $PROGRAM_NAME == __FILE__
