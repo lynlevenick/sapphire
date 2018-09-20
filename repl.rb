@@ -2,7 +2,7 @@
 # frozen_string_literal: true
 
 if $PROGRAM_NAME == __FILE__
-  # running interactively, bootstrap into bundler context
+  # running interactively, bootstrap into bundler
   require "rubygems"
   require "bundler/setup"
 end
