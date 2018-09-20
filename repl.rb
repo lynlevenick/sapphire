@@ -3,6 +3,7 @@
 
 if $PROGRAM_NAME == __FILE__
   # running interactively, bootstrap into bundler context
+  require "rubygems"
   require "bundler/setup"
 end
 
