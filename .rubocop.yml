@@ -19,6 +19,9 @@ Naming/UncommunicativeMethodParamName:
 Style/BlockDelimiters:
   EnforcedStyle: semantic
 
+Style/RegexpLiteral:
+  AllowInnerSlashes: true
+
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 
