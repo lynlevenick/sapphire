@@ -15,7 +15,8 @@ module Parser
   # Matches comments and whitespace
   IGNORED_REGEXP = /\A(?:\s+|;.*$)*/
   # Matches numbers, no distinction between integers and floats
-  NUMBER_REGEXP = /\A(?:-)?[0-9]*(?:.[0-9]+)?(?:e[0-9]+(?:.[0-9]+)?)?\z/
+  # @todo Figure out how to make e.g. (+1 2) => 3 work
+  NUMBER_REGEXP = /\A[-+]?[0-9]*\.?[0-9]+(?:e[-+]?[0-9]*\.?[0-9]+)?\z/i
   # Matches ruby-style-delimited regular expression syntax
   REGEXP_REGEXP = /
     \A
