@@ -31,11 +31,19 @@ module REPL
   end
 
   private_class_method def self.rep(source, tty: source_is_tty?(source))
-    print "user> " if tty
-    raise StopIteration if source.eof?
+    input = +""
 
-    input = source.readline
-    puts Parser.parse(input).inspect
+    loop do
+      sigil = input.size.zero? ? ">" : "*"
+      print "user#{sigil} " if tty
+      raise StopIteration if source.eof?
+
+      input << source.readline
+      begin
+        return puts Parser.parse(input).inspect
+      rescue Parser::UnexpectedEofError # rubocop:disable Lint/HandleExceptions
+      end
+    end
   end
 
   private_class_method def self.noninteractive(source)
