@@ -30,19 +30,17 @@ module REPL
     source.respond_to?(:file) && source.file&.tty?
   end
 
-  private_class_method def self.rep(source, tty: source_is_tty?(source))
-    input = +""
+  private_class_method def self.rep(source, input: +"",
+                                    tty: source_is_tty?(source))
+    sigil = input.size.zero? ? ">" : "*"
+    print "user#{sigil} " if tty
+    raise StopIteration if source.eof?
 
-    loop do
-      sigil = input.size.zero? ? ">" : "*"
-      print "user#{sigil} " if tty
-      raise StopIteration if source.eof?
-
-      input << source.readline
-      begin
-        return puts Parser.parse(input).inspect
-      rescue Parser::UnexpectedEofError # rubocop:disable Lint/HandleExceptions
-      end
+    input << source.readline
+    begin
+      puts Parser.parse(input).inspect
+    rescue Parser::UnexpectedEofError
+      rep(source, input: input, tty: tty)
     end
   end
 
