@@ -102,7 +102,7 @@ module Parser
       if scanner.scan(TOKEN)
         tokens << scanner[1]
       else
-        scanner.scan(IGNORED) and scanner.eos? and break or raise BadParseError
+        scanner.scan(IGNORED) && scanner.eos? and break or raise BadParseError
       end
     end
 
