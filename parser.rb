@@ -12,38 +12,38 @@ module Parser
   class BadParseError < StandardError
   end
 
-  BINARY_DIGIT_REGEXP =  /[01]|(?:[01]_[01])/
-  DECIMAL_DIGIT_REGEXP = /[0-9]|(?:[0-9]_[0-9])/
-  HEX_DIGIT_REGEXP =     /[0-9a-f]|(?:[0-9a-f]_[0-9a-f])/i
-  OCTAL_DIGIT_REGEXP =   /[0-7]|(?:_[0-7])/
+  BINARY_DIGIT =  /[01]|(?:[01]_[01])/
+  DECIMAL_DIGIT = /[0-9]|(?:[0-9]_[0-9])/
+  HEX_DIGIT =     /[0-9a-f]|(?:[0-9a-f]_[0-9a-f])/i
+  OCTAL_DIGIT =   /[0-7]|(?:_[0-7])/
 
-  BINARY_NUMBER_REGEXP = /0b#{BINARY_DIGIT_REGEXP}+/i
-  DECIMAL_NUMBER_REGEXP = /
-    #{DECIMAL_DIGIT_REGEXP}*\.?#{DECIMAL_DIGIT_REGEXP}+
-    (?:e[-+]?#{DECIMAL_DIGIT_REGEXP}*\.?#{DECIMAL_DIGIT_REGEXP}+)?
+  BINARY_NUMBER = /0b#{BINARY_DIGIT}+/i
+  DECIMAL_NUMBER = /
+    #{DECIMAL_DIGIT}*\.?#{DECIMAL_DIGIT}+
+    (?:e[-+]?#{DECIMAL_DIGIT}*\.?#{DECIMAL_DIGIT}+)?
   /ix
-  HEX_NUMBER_REGEXP = /0x#{HEX_DIGIT_REGEXP}+/i
-  OCTAL_NUMBER_REGEXP = /0#{OCTAL_DIGIT_REGEXP}+/
+  HEX_NUMBER = /0x#{HEX_DIGIT}+/i
+  OCTAL_NUMBER = /0#{OCTAL_DIGIT}+/
 
   # Matches numbers, no distinction between integers and floats
   # @todo Figure out how to make e.g. (+1 2) => 3 work, right now
   #       `+1` parses as an integer, but do we want (-1 2) => 1 or
   #       (-1 2) => can't call integer -1?
   #       consider: integer call is implicitly add
-  NUMBER_REGEXP = /
+  NUMBER = /
     \A
     [-+]?
     (?:
-      #{BINARY_NUMBER_REGEXP}
-    | #{DECIMAL_NUMBER_REGEXP}
-    | #{HEX_NUMBER_REGEXP}
-    | #{OCTAL_NUMBER_REGEXP}
+      #{BINARY_NUMBER}
+    | #{DECIMAL_NUMBER}
+    | #{HEX_NUMBER}
+    | #{OCTAL_NUMBER}
     )
     \z
   /x
 
   # Matches ruby-style-delimited regular expression syntax
-  REGEXP_REGEXP = /
+  REGEXP = /
     \A
     (?:
       \/(?:\\.|[^\\\/])*\/
@@ -52,19 +52,19 @@ module Parser
     \z
   /mx
   # Matches strings, including escaping
-  STRING_REGEXP = /\A"(?:\\.|[^\\"])*"\z/
+  STRING = /\A"(?:\\.|[^\\"])*"\z/
 
   # Matches comments and whitespace
-  IGNORED_REGEXP = /\A(?:\s+|;.*$)*/
+  IGNORED = /\A(?:\s+|;.*$)*/
 
   # Matches any Sapphire token, skipping whitespace and comments
-  TOKEN_REGEXP = /
-    #{IGNORED_REGEXP}
+  TOKEN = /
+    #{IGNORED}
     (
       ,@ | [()'`,]      # unquote-splicing, parens, quote, quasiquote, unquote
-    | #{NUMBER_REGEXP}
-    | #{REGEXP_REGEXP}
-    | #{STRING_REGEXP}
+    | #{NUMBER}
+    | #{REGEXP}
+    | #{STRING}
     | [^\s;()'`,]+      # identifiers
     )
   /x
@@ -99,10 +99,10 @@ module Parser
     tokens = []
 
     until scanner.eos?
-      if scanner.scan(TOKEN_REGEXP)
+      if scanner.scan(TOKEN)
         tokens << scanner[1]
       else
-        scanner.scan(IGNORED_REGEXP)
+        scanner.scan(IGNORED)
         scanner.eos? and break or raise BadParseError
       end
     end
@@ -198,11 +198,11 @@ module Parser
     when ",@"
       [:'unquote-splicing', read_form!(tokens)]
 
-    when NUMBER_REGEXP
+    when NUMBER
       parse_number_source(token)
-    when REGEXP_REGEXP
+    when REGEXP
       parse_regexp_source(token)
-    when STRING_REGEXP
+    when STRING
       parse_string_source(token)
 
     else
